@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#16060a">
+<meta name="description" content="Écran de jeu et classement en direct de Royal Spin.">
+<title>Royal Spin · Écran</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600;800&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/casino.css">
+</head>
+<body class="tv">
+<div class="tvwrap">
+  <header class="tvhead">
+    <div><h1 class="logo">ROYAL SPIN</h1></div>
+    <div class="meta"><div id="tvRound">Tour 1</div><div id="tvOnline" class="mut" style="font-family:var(--ui);font-size:.7em">0 joueur</div></div>
+  </header>
+
+  <section class="tvleft">
+    <div class="wheelwrap"><canvas id="wheel"></canvas></div>
+    <div class="bigstatus" id="bigstatus"></div>
+    <div class="overlay hide" id="overlay">
+      <div class="bignum" id="bignum"></div>
+      <div class="bigstatus" id="ovlTitle" style="margin:0"></div>
+      <div class="winners" id="winners"></div>
+    </div>
+  </section>
+
+  <section class="tvright">
+    <div class="panel tvlb"><h2 class="t">Classement</h2><div id="lb"></div></div>
+    <div class="panel qrbox">
+      <img id="qr" alt="QR code pour rejoindre" class="hide">
+      <div><h2 class="t" style="margin-bottom:.6vmin">Rejoignez la partie</h2><div class="mut">Scannez, choisissez un pseudo, jouez.</div><div class="u" id="url"></div></div>
+    </div>
+  </section>
+
+  <footer class="tvfoot">
+    <div class="hist" id="hist" style="justify-content:flex-start"></div>
+    <div class="hotcold"><span>Chauds</span><span id="hot" class="row" style="gap:5px"></span><span>Froids</span><span id="cold" class="row" style="gap:5px"></span></div>
+  </footer>
+</div>
+<div class="soundhint" id="soundhint">🔇 Cliquez n'importe où pour activer le son</div>
+
+<script src="socket.io/socket.io.js"></script>
+<script src="js/shared.js"></script>
+<script src="js/tv.js"></script>
+</body></html>

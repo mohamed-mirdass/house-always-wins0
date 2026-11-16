@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#16060a">
+<meta name="description" content="Commandes et statistiques de la partie Royal Spin.">
+<title>Royal Spin · Croupier</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600;800&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/casino.css">
+</head>
+<body class="hostpage"><main>
+  <h1 class="logo" style="font-size:2rem">ROYAL SPIN · CROUPIER</h1>
+  <div class="bulbs"></div>
+
+  <div id="auth" class="panel hide" style="max-width:420px;margin:20px auto">
+    <h2 class="t">Clé du croupier</h2>
+    <p class="mut" style="margin-top:0">Cette page est protégée. Saisissez la clé définie dans HOST_KEY.</p>
+    <div class="row"><input id="key" type="password" placeholder="Clé" style="flex:1;width:auto"><button class="btn" id="keybtn">Entrer</button></div>
+    <p id="keyerr" class="mut"></p>
+  </div>
+
+  <div id="panel" class="hide">
+    <div class="hgrid">
+      <div class="panel">
+        <h2 class="t">Commandes</h2>
+        <div class="stat" style="margin-bottom:12px">
+          <div><b id="hRound">1</b><small>tour</small></div>
+          <div><b id="hPhase">-</b><small>phase</small></div>
+          <div><b id="hOnline">0</b><small>en ligne</small></div>
+        </div>
+        <div class="row">
+          <button class="btn lg" id="spin">Lancer la roue</button>
+          <button class="btn lg ghost" id="next">Tour suivant</button>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <label class="switch"><input type="checkbox" id="auto" style="width:auto"> Mode automatique</label>
+          <select id="betms" style="width:auto">
+            <option value="10">Paris : 10 s</option><option value="15">Paris : 15 s</option><option value="25">Paris : 25 s</option>
+            <option value="40">Paris : 40 s</option><option value="60">Paris : 60 s</option>
+          </select>
+        </div>
+        <p class="mut" style="font-size:.85rem">En mode automatique, la roue se lance à la fin du compte à rebours et le tour suivant démarre tout seul.</p>
+        <div class="row" style="margin-top:10px">
+          <button class="btn sm ghost" id="resetScores">Remettre les scores à 1 000</button>
+          <button class="btn sm red" id="reset">Tout effacer</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="t">Inviter les joueurs</h2>
+        <div class="row" style="align-items:flex-start">
+          <img id="qr" alt="QR code" width="150" height="150" style="background:#fff;padding:6px;border-radius:8px" class="hide">
+          <div style="flex:1;min-width:150px">
+            <div class="mut" style="font-size:.85rem;margin-bottom:6px">Adresse affichée sur l'écran et le QR code</div>
+            <select id="urlsel"></select>
+            <p style="margin:12px 0 0"><a href="/tv" target="_blank" style="color:var(--brass2)">Ouvrir l'écran géant</a> (à projeter)</p>
+            <p style="margin:6px 0 0"><a href="/" target="_blank" style="color:var(--brass2)">Ouvrir la page joueur</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="t">Statistiques de la roue</h2>
+        <div class="stat">
+          <div><b id="sSpins">0</b><small>tirages</small></div>
+          <div><b id="sBet">0</b><small>points misés</small></div>
+          <div><b id="sPlayers">0</b><small>joueurs</small></div>
+        </div>
+        <div class="bars" id="bars"></div>
+        <div class="axis"><span>0</span><span>12</span><span>24</span><span>36</span></div>
+        <p class="mut" style="font-size:.8rem;margin:8px 0 0">Chaque barre est un numéro de 0 à 36.</p>
+      </div>
+
+      <div class="panel">
+        <h2 class="t">Joueurs</h2>
+        <table class="ptable"><thead><tr><th>Joueur</th><th>Pari</th><th>Points</th></tr></thead><tbody id="plist"></tbody></table>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="socket.io/socket.io.js"></script>
+<script src="js/shared.js"></script>
+<script src="js/host.js"></script>
+</body></html>

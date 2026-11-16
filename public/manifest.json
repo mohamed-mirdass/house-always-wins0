@@ -1,0 +1,13 @@
+{
+  "name": "Royal Spin",
+  "short_name": "Royal Spin",
+  "description": "Casino en points virtuels : roulette, blackjack, machine à sous",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#16060a",
+  "theme_color": "#16060a",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

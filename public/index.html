@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16060a">
+<meta name="description" content="Rejoignez Royal Spin, un casino multijoueur en points virtuels.">
+<title>Royal Spin · Casino</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600;800&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/casino.css">
+</head>
+<body class="player"><main>
+
+<!-- ============ ACCUEIL / INSCRIPTION ============ -->
+<section id="join" class="screen">
+  <div class="join-box">
+    <h1 class="logo big">ROYAL SPIN</h1>
+    <div class="bulbs"></div>
+    <p class="tag">Casino en points virtuels. Chaque joueur démarre avec 1 000 points.</p>
+    <div class="panel">
+      <h2 class="t">1 · Entrez votre nom</h2>
+      <p class="join-guidance">Ensuite, choisissez un numéro sur la roulette.</p>
+      <label class="join-label" for="nick">Votre nom</label>
+      <input id="nick" maxlength="16" placeholder="Ex. Alex" autocomplete="nickname" autocapitalize="words" enterkeyhint="go">
+      <details class="avatar-options">
+        <summary>Personnaliser l’avatar <span>(facultatif)</span></summary>
+        <div class="avatars" id="avatars"></div>
+      </details>
+      <button id="joinbtn" class="btn lg" style="width:100%;margin-top:14px" disabled>Choisir un numéro</button>
+      <p id="conn" class="mut" style="text-align:center;margin:10px 0 0">Connexion au serveur…</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APPLICATION ============ -->
+<section id="app" class="hide">
+  <header class="topbar">
+    <div class="who"><div class="av" id="myav"></div><div style="min-width:0"><b id="myname"></b><span class="lvl" id="mylvl"></span></div></div>
+    <div class="bal"><div class="n" id="bal">0</div><small>points</small></div>
+    <button class="iconbtn" id="mute" aria-label="Son">🔊</button>
+  </header>
+
+  <!-- ---- Roulette ---- -->
+  <section class="tab" id="tab-roulette">
+    <div class="wheelwrap"><canvas id="wheel"></canvas></div>
+    <div class="stick">
+      <div class="status" id="rStatus">En attente…</div>
+      <div class="timerbar" id="rBarWrap"><i id="rBar"></i></div>
+    </div>
+    <div class="hist" id="rHist"></div>
+    <div id="rBanner" class="banner hide"></div>
+    <div id="refillBox" class="banner hide">Plus de jetons ?<br><button class="btn sm" id="refill" style="margin-top:8px">Recharge gratuite +500</button></div>
+    <div class="chips" data-chips></div>
+    <div class="totals"><span class="mut">Mise en jeu</span><b id="rTotal">0</b></div>
+    <div class="rtable" id="rtable"></div>
+    <div class="actions">
+      <button class="btn ghost" id="undo">Annuler</button>
+      <button class="btn ghost" id="clear">Effacer</button>
+      <button class="btn ghost" id="rebet">Refaire</button>
+    </div>
+  </section>
+
+  <!-- ---- Blackjack ---- -->
+  <section class="tab hide" id="tab-blackjack">
+    <h2 class="t" style="text-align:center">BLACKJACK · paie 3 pour 2</h2>
+    <div class="bjtable">
+      <div class="hlabel">Croupier <b id="bjDv"></b></div>
+      <div class="hand" id="bjDealer"></div>
+      <div class="felt-msg" id="bjMsg">Placez votre mise</div>
+      <div class="hand" id="bjPlayer"></div>
+      <div class="hlabel">Vous <b id="bjPv"></b> <span id="bjBet"></span></div>
+    </div>
+    <div id="bjDealBox">
+      <div class="chips" data-chips></div>
+      <button class="btn lg" id="bjDeal" style="width:100%">Distribuer</button>
+    </div>
+    <div id="bjPlayBox" class="actions hide">
+      <button class="btn" id="bjHit">Tirer</button>
+      <button class="btn red" id="bjStand">Rester</button>
+      <button class="btn ghost" id="bjDouble">Doubler</button>
+    </div>
+  </section>
+
+  <!-- ---- Machine à sous ---- -->
+  <section class="tab hide" id="tab-slots">
+    <h2 class="t" style="text-align:center">MACHINE À SOUS</h2>
+    <div class="slot">
+      <div class="reels"><div class="reel" id="r0"><span>🍒</span></div><div class="reel" id="r1"><span>🍋</span></div><div class="reel" id="r2"><span>🔔</span></div></div>
+      <div class="felt-msg" id="slotMsg">Trois symboles identiques = jackpot</div>
+      <div class="chips" data-chips></div>
+      <button class="btn lg red" id="slotSpin" style="width:100%">TOURNER</button>
+      <div class="paytable">
+        <div>🍒🍒🍒 <b>×10</b></div><div>🍋🍋🍋 <b>×12</b></div><div>🔔🔔🔔 <b>×20</b></div>
+        <div>⭐⭐⭐ <b>×50</b></div><div>7️⃣7️⃣7️⃣ <b>×100</b></div><div>💎💎💎 <b>×250</b></div>
+      </div>
+      <p class="mut" style="text-align:center;font-size:.8rem;margin:10px 0 0">Deux cerises = mise remboursée</p>
+    </div>
+  </section>
+
+  <!-- ---- Classement ---- -->
+  <section class="tab hide" id="tab-rank">
+    <div class="panel"><h2 class="t">Classement</h2><div id="lb"></div></div>
+  </section>
+
+  <nav class="bottomnav" id="nav">
+    <button data-tab="roulette" class="on"><span>🎡</span>Roulette</button>
+    <button data-tab="blackjack"><span>🃏</span>Blackjack</button>
+    <button data-tab="slots"><span>🎰</span>Slots</button>
+    <button data-tab="rank"><span>🏆</span>Classement</button>
+  </nav>
+</section>
+
+</main>
+<script src="socket.io/socket.io.js"></script>
+<script src="js/shared.js"></script>
+<script src="js/player.js"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}</script>
+</body></html>
