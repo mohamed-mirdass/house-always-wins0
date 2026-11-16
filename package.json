@@ -1,18 +1,22 @@
 {
   "name": "royal-spin",
   "version": "2.0.0",
-  "description": "Casino multijoueur en points virtuels (Node.js + Socket.IO)",
+  "description": "Casino multijoueur en points virtuels (Vercel + Supabase)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
-    "@upstash/redis": "^1.41.0",
+    "@supabase/supabase-js": "2.119.0",
     "express": "^4.19.2",
-    "qrcode": "^1.5.3",
-    "socket.io": "^4.7.5"
+    "pg": "8.23.1",
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.16"
   }
 }

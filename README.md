@@ -1,73 +1,60 @@
-# Royal Spin — casino multijoueur (points virtuels)
+# Royal Spin — Vercel + Supabase
 
-Projet de 2ᵉ année génie informatique. Application web temps réel : **roulette** multijoueur, **blackjack**, **machine à sous**, classement et **mode écran géant** pour projeter la partie.
+Multiplayer casino using virtual points only: roulette, blackjack, slots, live leaderboard, dealer controls (`/host`), TV display (`/tv`), QR joining and PWA installation. No Redis or Socket.IO server is required.
 
-> Aucun argent réel : tout se joue en points virtuels (1 000 points au départ).
+## Deploy
 
-## Lancer en local
+1. Create or choose your **target** Supabase project. Run `sql/setup.sql` in its SQL Editor. This creates an isolated `royal_spin` schema for private game state and a public, read-only Realtime revision counter. Running the script again preserves existing state.
+2. From Supabase **Connect**, copy the **transaction pooler** Postgres connection string (port 6543). Replace its password placeholder; URL-encode special password characters. Use this as `DATABASE_URL`. TLS verification stays enabled. If your environment requires a custom CA, configure `NODE_EXTRA_CA_CERTS`; do not disable verification.
+3. In Vercel, import this repository, use the **Other** preset, Node.js **22.x**, repository root directory, and leave build/output overrides unset. The API entrypoint and `vercel.json` route the application to Express. Remove any old output-directory override such as `public`.
+4. Add the following environment variables for Production (and Preview if testing a preview):
 
-```bash
-npm install
-npm start
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Supabase transaction pooler connection string; server only |
+| `SUPABASE_URL` | Target project URL |
+| `SUPABASE_PUBLISHABLE_KEY` | Target project's publishable key (legacy anon key also works); safe for browser use |
+| `SESSION_SECRET` | At least 32 random characters; server only; keep stable between deployments |
+| `HOST_KEY` | Long random dealer password; server only |
+| `PUBLIC_URL` | Canonical HTTPS site URL, used in the joining QR code |
+| `CRON_SECRET` | Separate random secret for the optional background scheduler |
+
+Generate secrets individually with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Never use a Supabase service role key in the browser. No service role key is needed by this application.
+5. Redeploy and verify `/healthz` returns `ok`. Open `/host` and enter `HOST_KEY`; open `/tv` for the projector and `/` for players.
+6. For automatic rounds even when all browsers are closed, enable Supabase `pg_cron` and `pg_net`, create the two Vault secrets described in `sql/scheduler.sql`, then run that script. This makes an HTTP request every five seconds and incurs the corresponding Vercel invocations. Monitor `cron.job_run_details` and `net._http_response` for failures. Without the scheduler, open browsers advance due phases through a two-second heartbeat; with no browsers the game pauses until the next request. Transitions can be a few seconds late; this is not a subsecond scheduler. No wagers are accepted after an expired betting deadline because the server advances the game before processing actions.
+
+The frontend listens to Supabase Realtime for revision changes and fetches an authoritative public/private view through Vercel. The heartbeat also recovers from missed notifications. Ensure the `royal_spin_revision` table is enabled in the `supabase_realtime` publication (the setup script does this).
+
+## Local development
+
+Use a development Supabase project and run the setup SQL there. Copy `.env.example` to `.env`, fill in its values, and set `PUBLIC_URL=http://localhost:3000`.
+
+```sh
+npm ci
+node --env-file=.env server.js
 ```
 
-Le terminal affiche trois adresses :
+`npm start` works when environment variables are already exported. `npm test` runs engine and embedded Postgres tests without a hosted project.
 
-| Page | Adresse | Usage |
-|------|---------|-------|
-| Croupier | `http://localhost:3000/host` | lancer la roue, mode automatique, statistiques |
-| Écran géant | `http://localhost:3000/tv` | à projeter : roue, classement, QR code |
-| Joueurs | `http://<IP du PC>:3000` | les téléphones (même WiFi) scannent le QR code |
+## Architecture and limits
 
-Si le QR code pointe vers une mauvaise adresse (carte réseau virtuelle), choisissez la bonne dans la liste déroulante de la page croupier.
+Each action loads the game inside a Postgres transaction with `SELECT ... FOR UPDATE`, applies the existing JavaScript rules, and commits the complete private state. Requests from different Vercel instances serialize on the same row, avoiding lost balance updates and double settlement. Blackjack decks, pending slot payouts, roulette deadlines and bets survive restarts. No background process, local file writes or in-memory timers are required.
 
-## Fonctionnalités
+This intentionally retains one small shared game (up to 300 registered players), not a large multiroom platform. A single JSON state row and full leaderboard responses become bottlenecks at high activity; load-test at your expected attendance before an event. Split into per-room/per-player rows for larger deployments.
 
-- Roulette européenne (0-36) : numéro plein (×36), rouge/noir, pair/impair, manque/passe, douzaines et colonnes
-- Roue animée (canvas), sons (WebAudio), confettis, historique, numéros chauds/froids
-- Blackjack contre le croupier (blackjack paie 3 pour 2, doubler)
-- Machine à sous (jackpot ×250)
-- Niveaux, badges et classement en direct
-- Mode automatique : compte à rebours, tirage et nouveau tour sans intervention
-- Sauvegarde des joueurs dans `data.json`
-- Installable sur téléphone (PWA)
+Player identity is a signed, HttpOnly, SameSite cookie minted on the server; client-supplied IDs are ignored. Players do not need email accounts. Clearing cookies or changing `SESSION_SECRET` loses access to that player; account recovery is not implemented. Dealer authorization is checked on every request. Browser roles cannot access the private schema or modify the revision counter. Only a harmless revision counter is published through Realtime.
 
-## Architecture
+Action retries use the same request ID and a durable cached response in the private `royal_spin.requests` table. Monitor its size; archive old entries only when their replay protection is no longer required. Automatic settlement also checks stored phase/payout state, so repeated scheduler invocations cannot pay a round twice.
 
-```
-server.js          Express + Socket.IO. Toute la logique (paris, tirage, gains,
-                   blackjack, slots) est côté serveur.
-public/
-  index.html       page joueur            js/player.js
-  tv.html          écran géant            js/tv.js
-  host.html        croupier + stats       js/host.js
-  js/shared.js     roue canvas, audio, confettis
-  css/casino.css   thème
-```
+Existing Upstash/local scores are **not imported automatically**. Export and migrate them separately before switching if they must be retained. Existing browser IDs are replaced by signed sessions. Keep the previous deployment available until you have tested the new deployment with multiple browsers.
 
-- **Temps réel** : événements Socket.IO (`bet`, `spin`, `state`, `me`…). L'état public est diffusé à tous, l'état privé (mises, main de blackjack) uniquement au joueur concerné.
-- **Anti-triche** : le client n'envoie que des intentions. Le serveur valide chaque mise (type, montant, solde), tire le numéro avec `crypto.randomInt` et calcule les gains. Les cartes du croupier restent cachées tant que la main n'est pas terminée.
-- **Droits du croupier** : seul `localhost` (ou la clé `HOST_KEY` en ligne) peut lancer la roue ou réinitialiser.
-- **Persistance** : `data.json`, écrit toutes les 2 s si quelque chose a changé.
+## Verification before using the live site
 
-## Mettre en ligne (Render, gratuit)
+- Join with two separate browser profiles, place concurrent bets, undo, clear and repeat bets.
+- Spin from `/host`; verify the TV, leaderboard and both players agree.
+- Test blackjack hit/stand/double, slots, refill and dealer resets.
+- Enable automatic play, reload during a spin/blackjack hand, and verify balances and pending payouts survive.
+- Confirm an incorrect dealer key cannot spin or reset.
+- Check Realtime updates, `/healthz`, Vercel logs and scheduler responses.
 
-1. Créer un dépôt GitHub avec ce dossier (le fichier `render.yaml` est déjà prêt).
-2. Sur render.com : **New → Blueprint**, choisir le dépôt, valider.
-3. Dans **Environment**, lire la valeur de `HOST_KEY` (générée automatiquement). C'est le mot de passe de la page `/host`.
-4. Ouvrir `https://<votre-app>.onrender.com/host`, saisir la clé, puis `/tv` sur le projecteur. Le QR code pointe automatiquement vers l'adresse publique.
-
-Notes : l'offre gratuite s'endort après 15 min sans visite (premier chargement lent) et le disque est éphémère, donc `data.json` est remis à zéro à chaque redéploiement.
-
-Variables d'environnement : `PORT`, `HOST_KEY`, `PUBLIC_URL`, `DATA_FILE`.
-
-## Mettre en ligne sur Vercel
-
-Le projet inclut `Dockerfile.vercel` pour lancer le serveur Express + Socket.IO comme un conteneur Vercel.
-
-1. Envoyez le dossier `royal-spin` dans un dépôt GitHub, puis importez ce dépôt dans Vercel.
-2. Ajoutez l’intégration Upstash Redis depuis le Marketplace Vercel. Elle fournit `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN`.
-3. Dans **Settings → Environment Variables**, ajoutez `HOST_KEY` avec une longue clé privée. Ne la partagez qu’avec le croupier.
-4. Redéployez le projet. Le classement, les noms des joueurs, leurs points, l’historique et les statistiques sont sauvegardés dans Redis. En local, le projet continue d’utiliser `data.json`.
-
-Le classement affiche le solde courant de chaque joueur en points et conserve les joueurs même après leur déconnexion. Les fonctions/containers Vercel peuvent être recyclés ou mis à l’échelle : la sauvegarde Redis conserve les scores, mais cette version garde l’état d’une partie active en mémoire. Elle convient à une petite partie sur une instance; un jeu Vercel multi-instance doit aussi partager l’état de jeu en temps réel entre les instances.
+No hosted database or production deployment is modified by the test suite.
