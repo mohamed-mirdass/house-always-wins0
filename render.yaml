@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: royal-spin
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: HOST_KEY
+        generateValue: true
+      - key: NODE_VERSION
+        value: 20
